@@ -6,6 +6,3 @@ test:
 preprocess:
 	Rscript "scripts/preprocess.R"
 
-
-
-	
