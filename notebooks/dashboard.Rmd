@@ -7,15 +7,34 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(ggpubr)
+bar_color <- rgb(100/255,100/255,225/255,1)
 ```
 
 ```{r}
-ansa_df <- read.csv2("../data/ANSA.csv", sep=",")
+# ansa_df <- read_delim("../data/ANSA.csv", delim=",")
+# dummy data for now
+x <- c(1, 2, 3, 4, 2.43, 2.0, 1.0, 0.0, 28, 11, 5, 1)
+m <- matrix(x, nrow=4, ncol=3, dimnames=list(c(1:4),c("label", "avg_need", "count_id")))
+df <- as.data.frame(m)
 ```
 
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r ANSA, echo=TRUE}
+# second axis example: https://www.r-graph-gallery.com/line-chart-dual-Y-axis-ggplot2.html  
+coeff <- 10 # scaling transform for second axis
+ggplot(df, mapping=aes(x=df$label, y=df$avg_need)) + 
+  geom_bar(stat="identity", width=0.5, fill=bar_color) +
+  geom_line(aes(y=df$count_id/coeff), size=1.5, color="orange") +
+  geom_point( aes(y=df$count_id/coeff), size=3, color="orange") +
+  scale_y_continuous(
+    name = "Average Need",
+    sec.axis = sec_axis(~.*coeff, name="Count Id")
+  ) +
+  xlab("Row Label") +
+  ylab("Average Need") + 
+  ggtitle("ANSA - Average of Need") + 
+  theme_linedraw()
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
