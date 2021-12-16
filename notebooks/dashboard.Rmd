@@ -2,7 +2,9 @@
 title: "dashboard"
 author: "Matthew Hull"
 date: "12/15/2021"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -21,15 +23,15 @@ df <- as.data.frame(m)
 ```
 
 
-```{r ANSA, echo=TRUE}
+```{r ANSA, echo=False}
 # second axis example: https://www.r-graph-gallery.com/line-chart-dual-Y-axis-ggplot2.html  
 # underlying table example using ggpubr: https://www.datanovia.com/en/blog/how-to-create-a-beautiful-plots-in-r-with-summary-statistics-labels/
 
 coeff <- 10 # scaling transform for second axis
-ansa_avg_need_plot <- ggplot(df, mapping=aes(x=df$label, y=df$avg_need)) + 
+ansa_avg_need_plot <- ggplot(df, mapping=aes(x="label", y="avg_need")) + 
   geom_bar(stat="identity", width=0.1, fill=bar_color) +
-  geom_line(aes(y=df$count_id/coeff), size=1.5, color="orange") +
-  geom_point(aes(y=df$count_id/coeff), size=3, color="orange") +
+  geom_line(aes(y="count_id"/coeff), size=1.5, color="orange") +
+  geom_point(aes(y="count_id"/coeff), size=3, color="orange") +
   scale_y_continuous(
     name = "Average Need",
     sec.axis = sec_axis(~.*coeff, name="Count Id")
