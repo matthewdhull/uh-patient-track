@@ -23,18 +23,28 @@ df <- as.data.frame(m)
 
 ```{r ANSA, echo=TRUE}
 # second axis example: https://www.r-graph-gallery.com/line-chart-dual-Y-axis-ggplot2.html  
+# underlying table example using ggpubr: https://www.datanovia.com/en/blog/how-to-create-a-beautiful-plots-in-r-with-summary-statistics-labels/
+
 coeff <- 10 # scaling transform for second axis
-ggplot(df, mapping=aes(x=df$label, y=df$avg_need)) + 
-  geom_bar(stat="identity", width=0.5, fill=bar_color) +
+ansa_avg_need_plot <- ggplot(df, mapping=aes(x=df$label, y=df$avg_need)) + 
+  geom_bar(stat="identity", width=0.1, fill=bar_color) +
   geom_line(aes(y=df$count_id/coeff), size=1.5, color="orange") +
-  geom_point( aes(y=df$count_id/coeff), size=3, color="orange") +
+  geom_point(aes(y=df$count_id/coeff), size=3, color="orange") +
   scale_y_continuous(
     name = "Average Need",
     sec.axis = sec_axis(~.*coeff, name="Count Id")
   ) +
-  xlab("Row Label") +
   ylab("Average Need") + 
   ggtitle("ANSA - Average of Need") + 
-  theme_linedraw()
+  theme_bw() +
+  theme(axis.title.x=element_blank())  
+
+ansa_avg_table <- ggsummarytable(df, x="label", y=c("count_id", "avg_need"), digits = 2,
+                                 ggtheme = theme_void())
+
+ggarrange(
+  ansa_avg_need_plot, ansa_avg_table, ncol=1, align = "v", heights = c(0.80, 0.20)
+)
+  
 ```
 
