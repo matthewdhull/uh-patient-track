@@ -1,5 +1,5 @@
 ---
-title: "dashboard"
+title: "UH AOT Patient Dashboard"
 author: "Matthew Hull"
 date: "12/15/2021"
 output:
@@ -23,15 +23,15 @@ df <- as.data.frame(m)
 ```
 
 
-```{r ANSA, echo=False}
+```{r ANSA, echo=FALSE}
 # second axis example: https://www.r-graph-gallery.com/line-chart-dual-Y-axis-ggplot2.html  
 # underlying table example using ggpubr: https://www.datanovia.com/en/blog/how-to-create-a-beautiful-plots-in-r-with-summary-statistics-labels/
 
 coeff <- 10 # scaling transform for second axis
-ansa_avg_need_plot <- ggplot(df, mapping=aes(x="label", y="avg_need")) + 
+ansa_avg_need_plot <- ggplot(df, mapping=aes(x=`label`, y=`avg_need`)) + 
   geom_bar(stat="identity", width=0.1, fill=bar_color) +
-  geom_line(aes(y="count_id"/coeff), size=1.5, color="orange") +
-  geom_point(aes(y="count_id"/coeff), size=3, color="orange") +
+  geom_line(aes(y=`count_id`/coeff), size=1.0, color="orange") +
+  geom_point(aes(y=`count_id`/coeff), size=3, color="orange") +
   scale_y_continuous(
     name = "Average Need",
     sec.axis = sec_axis(~.*coeff, name="Count Id")
@@ -47,6 +47,39 @@ ansa_avg_table <- ggsummarytable(df, x="label", y=c("count_id", "avg_need"), dig
 ggarrange(
   ansa_avg_need_plot, ansa_avg_table, ncol=1, align = "v", heights = c(0.80, 0.20)
 )
-  
+
+```
+
+```{r warning=FALSE}
+library(data.table)
+library(dplyr)
+library(tidyr)
+
+ansa_patient_trajectory_df <- read.csv("../data/ansa_dummy_patient_trajectory.csv")
+
+# transpose and gather into long format
+df_t <- transpose(ansa_patient_trajectory_df) %>%
+  mutate(id = colnames(ansa_patient_trajectory_df)) %>%
+  slice(2:nrow(.)) %>%
+  rename(`1`=`V1`, `2`=`V2`,`3`=`V3`,`4`=`V4`) %>%
+  relocate(`id`, .before=`1`)
+
+keycol <- "admin_number"
+valuecol <- "count"
+gathercols <- colnames(df_t)[2:length(colnames(df_t))]
+
+ansa_df <- gather_(df_t, keycol, valuecol, gathercols) %>%
+  arrange(id,count) %>%
+  filter(!is.na(`count`))
+
+p <- ggplot(ansa_df, mapping=aes(x=as.numeric(`admin_number`), y=`count`, color=`id`)) + 
+  geom_point() + 
+  geom_line(group=1) +
+  facet_wrap(~`id`) +  
+  theme (legend.position = "none") +
+  xlab("Administration Number") +
+  ylab("Need Count") +
+  ggtitle("ANSA - Patient Trajectory")
+suppressMessages(print(p))
 ```
 
