@@ -74,7 +74,7 @@ ansa_df <- gather_(df_t, keycol, valuecol, gathercols) %>%
 
 p <- ggplot(ansa_df, mapping=aes(x=as.numeric(`admin_number`), y=`count`, color=`id`)) + 
   geom_point() + 
-  geom_line(group=1) +
+  geom_line() +
   facet_wrap(~`id`) +  
   theme (legend.position = "none") +
   xlab("Administration Number") +
