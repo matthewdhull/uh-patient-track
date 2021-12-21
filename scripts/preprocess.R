@@ -3,10 +3,10 @@ print('...preprocessing...')
 file <- "data/UH AOT Data Report_ Oct 2021.xlsx"
 sheets <- excel_sheets(file)
 
-required_sheets_csv <- read.csv2("data/required_sheets.csv")['x']
-required_sheets <- as.vector(as_vector(required_sheets_csv))
+required_sheets_csv <- read.csv2("data/required_sheets.csv", sep=",")['x']
+required_sheets <- required_sheets_csv$x
 missing_sheets <- setdiff(required_sheets,sheets)
-print(paste("found",length(missing_sheets), "missing sheets"))
+print(paste("found",length(missing_sheets), "missing sheet(s):", missing_sheets))
 
 
 # read in Sheets 2-12 and create dataframes
