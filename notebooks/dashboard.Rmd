@@ -11,10 +11,13 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(ggpubr)
-bar_color <- rgb(100/255,100/255,225/255,1)
+library(data.table)
+library(dplyr)
+library(tidyr)
 ```
 
 ```{r}
+bar_color <- rgb(100/255,100/255,225/255,1)
 # ansa_df <- read_delim("../data/ANSA.csv", delim=",")
 # dummy data for now
 x <- c(1, 2, 3, 4, 2.43, 2.0, 1.0, 0.0, 28, 11, 5, 1)
@@ -23,9 +26,10 @@ df <- as.data.frame(m)
 ```
 
 
-```{r ANSA, echo=FALSE}
+```{r ANSA, echo=TRUE, warning=FALSE}
 # second axis example: https://www.r-graph-gallery.com/line-chart-dual-Y-axis-ggplot2.html  
-# underlying table example using ggpubr: https://www.datanovia.com/en/blog/how-to-create-a-beautiful-plots-in-r-with-summary-statistics-labels/
+# underlying table example using ggpubr:
+# https://www.datanovia.com/en/blog/how-to-create-a-beautiful-plots-in-r-with-summary-statistics-labels/
 
 coeff <- 10 # scaling transform for second axis
 ansa_avg_need_plot <- ggplot(df, mapping=aes(x=`label`, y=`avg_need`)) + 
@@ -51,9 +55,6 @@ ggarrange(
 ```
 
 ```{r warning=FALSE}
-library(data.table)
-library(dplyr)
-library(tidyr)
 
 ansa_patient_trajectory_df <- read.csv("../data/ansa_dummy_patient_trajectory.csv")
 
