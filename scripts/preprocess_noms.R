@@ -2,18 +2,16 @@ print('...preprocessing NOMS data...')
 
 noms_file <- "data/NOMS.csv"
 code_lookup_file <- "data/CMHSNOMsAdultClientLevelMeasuresCodebook_20210204.xlsx"
-noms_df <- read.csv2(noms_file, sep=",")
+df <- read.csv2(noms_file, sep=",")
 
 
 code_lookup_df <- read_excel(code_lookup_file)
 colnames(code_lookup_df) <- code_lookup_df[1,,] # first row contains cols
 
-# rm trailing ' from `ConsumerID`
-noms_df$ConsumerID <- substr(noms_df$ConsumerID, 0,6)
 
 # TODO - 
 # verify required cols
-noms_cols <- colnames(noms_df)
+noms_cols <- colnames(df)
 
 # implement code lookup for req'd cols
 # split column "Value Description" for easier lookup
@@ -26,6 +24,13 @@ for (i in seq(1, length(splits))){
   split_v <- append(split_v, v)
   split_d <- append(split_d, d)
 }
+
+# format specific fields for easier lookup
+# rm trailing ' from `ConsumerID`
+df$ConsumerID <- substr(df$ConsumerID, 0,6)
+# add leading '0' to NOMS Assessment field code to match lookup
+df$Assessment <- as.character(df$Assessment)
+df$Assessment[substr(df$Assessment, 1, 1)!="-"] = paste("0", df$Assessment, sep="")
 
 # add new cols to NOMS for separate "value description" fields
 # named as "code" and "code_description"
@@ -76,23 +81,43 @@ lookup <- function(x, d=NA) {
 # examples usage of get_lookup_code_range()
 # returns: > 219 220 221 222 223 224 225
 # these values are row nums in lookup df for each code
-codes_range <- get_lookup_code_range("Gender")
+# gender_codes_range <- get_lookup_code_range("Gender")
 
 # example usage of get_lookup_dict()
 # using the sequence, combine "codes" & "code_description"
 # as a dictionary so we can lookup key value pairs
-gender_lookup <- get_lookup_dict(codes_range)
+# gender_lookup <- get_lookup_dict(gender_codes_range)
 
 # make replacement for codes. 
 # use dictionary and replace all codes with their values in NOMS
-noms_df$Gender <- lapply(noms_df$Gender, d=gender_lookup)
-
+# noms_df$Gender <- lapply(noms_df$Gender, d=gender_lookup)
 
 # example 2: De-code 'Interview Type' using lookup
 # de-code interview / assesment type
-interview_type_code_range <- get_lookup_code_range("InterviewType_07")
-interview_type_lookup <- get_lookup_dict(interview_type_code_range)
-noms_df$InterviewType_07 <- lapply(noms_df$InterviewType_07, lookup2, d=interview_type_lookup)
+# interview_type_code_range <- get_lookup_code_range("InterviewType_07")
+# interview_type_lookup <- get_lookup_dict(interview_type_code_range)
+# noms_df$InterviewType_07 <- lapply(noms_df$InterviewType_07, lookup, d=interview_type_lookup)
+
+
+# All NOMS cols to de-code
+decode_cols <- noms_cols[c(4:12,18:41,43:50)]
+
+decode_NOMS_fields <- function(df, fields){
+  for (i in seq(1:length(fields))){
+     field_lookup <- {}
+     field = fields[i]
+     field_code_range <- get_lookup_code_range(field)
+     field_lookup <- get_lookup_dict(field_code_range)
+     df[,field] <- as.character(df[,field])
+     l <- df[, field]
+     dlist <- lapply(l, lookup, d=field_lookup)
+     dlist <- unlist(dlist)
+     df[, field] <- dlist
+  }
+  return (df)
+}
+
+df <- decode_NOMS_fields(df, decode_cols)
 
 # preprocess_args <- list(file, idx, 5, 6, TRUE)
 # noms_data <- do.call(fun, preprocess_args) # write out preprocessed data
