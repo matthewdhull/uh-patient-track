@@ -39,6 +39,11 @@ code_lookup_df$code <- split_v
 code_lookup_df$code_description <- split_d
 code_lookup_df <- code_lookup_df[,c(1:7, 10:11, 8:9)] 
 
+na_m1 <- which ( code_lookup_df$code == -1)
+na_m4 <- which ( code_lookup_df$code == -4)
+code_lookup_df$code_description[na_m1] = NA
+code_lookup_df$code_description[na_m4] = NA
+
 # get NOMS column index e.g., Gender
 field = "Gender"
 noms_gender_col_index <- which (noms_cols == field)
