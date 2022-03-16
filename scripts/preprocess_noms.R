@@ -6,7 +6,14 @@ df <- read.csv2(noms_file, sep=",")
 
 
 code_lookup_df <- read_excel(code_lookup_file)
+
 colnames(code_lookup_df) <- code_lookup_df[1,,] # first row contains cols
+# ignore first row (colnames)
+code_lookup_df <- code_lookup_df[2:nrow(code_lookup_df),]
+# add row to mark doc end
+end_lookup_doc <- code_lookup_df[nrow(code_lookup_df),]
+end_lookup_doc$`Field Name` = "End"
+code_lookup_df <- rbind(code_lookup_df, end_lookup_doc)
 
 
 # TODO - 
@@ -39,6 +46,7 @@ code_lookup_df$code <- split_v
 code_lookup_df$code_description <- split_d
 code_lookup_df <- code_lookup_df[,c(1:7, 10:11, 8:9)] 
 
+# collapse verbose "N/A .... " descriptions to be only NA
 na_m1 <- which ( code_lookup_df$code == -1)
 na_m4 <- which ( code_lookup_df$code == -4)
 code_lookup_df$code_description[na_m1] = NA
@@ -105,7 +113,8 @@ lookup <- function(x, d=NA) {
 
 
 # All NOMS cols to de-code
-decode_cols <- noms_cols[c(4:12,18:41,43:50)]
+decode_cols <- noms_cols[c(4:12,18:41,43:84, 86:191,193, 196:218)]
+
 
 decode_NOMS_fields <- function(df, fields){
   for (i in seq(1:length(fields))){
