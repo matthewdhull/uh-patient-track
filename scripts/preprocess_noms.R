@@ -42,11 +42,16 @@
 ########################################################################
 
 get_lookup_code_range <- function(field_name) {
-  # returns a sequence vector of index values for a field and its codes/descriptions
-  # operates on code_lookup_df values
-  # get lookup Table row index 
-  # step table row until not N/A to find end of codes for field
-  # start at given index row +1
+#'  
+#' @param field_name character. Field name used for code range lookup
+#' @return vector. Sequence of index values for a field and its codes/descriptions
+#' @usage code_range <- get_lookup_code_range("Gender")
+#' @details operates on code_lookup_df values
+#'  get lookup Table row index
+#'  step table row until not N/A to find end of codes for field
+#'  start at given index row +1
+#'
+  
   lookup_t_row_index <- which (code_lookup_df$`Field Name` == field_name) 
   start_index <- lookup_t_row_index + 1
   v = code_lookup_df$`Field Name`[start_index]
@@ -191,3 +196,4 @@ df <- decode_NOMS_fields(df, decode_cols)
 write_csv(df, "data/noms_df.csv")
 
 print('preprocessing NOMS data complete.')
+
