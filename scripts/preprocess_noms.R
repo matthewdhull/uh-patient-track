@@ -1,59 +1,45 @@
-print('...preprocessing NOMS data...')
-
-noms_file <- "data/NOMS.csv"
-code_lookup_file <- "data/CMHSNOMsAdultClientLevelMeasuresCodebook_20210204.xlsx"
-df <- read.csv2(noms_file, sep=",")
-
-
-code_lookup_df <- read_excel(code_lookup_file)
-
-colnames(code_lookup_df) <- code_lookup_df[1,,] # first row contains cols
-# ignore first row (colnames)
-code_lookup_df <- code_lookup_df[2:nrow(code_lookup_df),]
-# add row to mark doc end
-end_lookup_doc <- code_lookup_df[nrow(code_lookup_df),]
-end_lookup_doc$`Field Name` = "End"
-code_lookup_df <- rbind(code_lookup_df, end_lookup_doc)
-
-
-# TODO - 
-# verify required cols
-noms_cols <- colnames(df)
-
-# implement code lookup for req'd cols
-# split column "Value Description" for easier lookup
-splits <- strsplit(code_lookup_df$`Value Descriptions`, " = ")
-split_v <- c()
-split_d <- c()
-for (i in seq(1, length(splits))){
-  v <- splits[i][[1]][1]
-  d <- splits[i][[1]][2]
-  split_v <- append(split_v, v)
-  split_d <- append(split_d, d)
-}
-
-# format specific fields for easier lookup
-# rm trailing ' from `ConsumerID`
-df$ConsumerID <- substr(df$ConsumerID, 0,6)
-# add leading '0' to NOMS Assessment field code to match lookup
-df$Assessment <- as.character(df$Assessment)
-df$Assessment[substr(df$Assessment, 1, 1)!="-"] = paste("0", df$Assessment, sep="")
-
-# add new cols to NOMS for separate "value description" fields
-# named as "code" and "code_description"
-# rearrange columns so "Values Descriptions" are next to "code" / "code description"
-code_lookup_df$code <- split_v
-code_lookup_df$code_description <- split_d
-code_lookup_df <- code_lookup_df[,c(1:7, 10:11, 8:9)] 
-
-# collapse verbose "N/A .... " descriptions to be only NA
-# FIXME - Handle 'Unkown' or 'Refused'?
-na_m1 <- which ( code_lookup_df$code == -1)
-na_m4 <- which ( code_lookup_df$code == -4)
-na_m9 <- which ( code_lookup_df$code == -9)
-code_lookup_df$code_description[na_m1] = NA
-code_lookup_df$code_description[na_m4] = NA
-code_lookup_df$code_description[na_m9] = NA
+# This script is intended to pre-process:
+# - NOMS data
+# - MHS NOMs Adult Client Level Measures Codebook
+# This script can be run standalone or with Makefile recipes
+# (see ../Makefile)
+#
+########################################################################
+#                                                                      #
+#                         Example Usage                                #
+#                                                                      #
+########################################################################
+#
+# e.g.., get NOMS column index e.g., Gender
+# field = "Gender"
+# noms_gender_col_index <- which (noms_cols == field)
+#
+# example 1: De-code 'Gender' using lookup 
+# examples usage of get_lookup_code_range()
+# returns: > 219 220 221 222 223 224 225
+# these values are row nums in lookup df for each code
+# gender_codes_range <- get_lookup_code_range("Gender")
+#
+# example usage of get_lookup_dict()
+# using the sequence, combine "codes" & "code_description"
+# as a dictionary so we can lookup key value pairs
+# gender_lookup <- get_lookup_dict(gender_codes_range)
+#
+# make replacement for codes. 
+# use dictionary and replace all codes with their values in NOMS
+# noms_df$Gender <- lapply(noms_df$Gender, d=gender_lookup)
+#
+# example 2: De-code 'Interview Type' using lookup
+# de-code interview / assesment type
+# interview_type_code_range <- get_lookup_code_range("InterviewType_07")
+# interview_type_lookup <- get_lookup_dict(interview_type_code_range)
+# noms_df$InterviewType_07 <- lapply(noms_df$InterviewType_07, lookup, d=interview_type_lookup)
+#
+########################################################################
+#                                                                      #
+# Convenience fns for performing lookup and replacement of NOMS codes  #
+#                                                                      #
+########################################################################
 
 get_lookup_code_range <- function(field_name) {
   # returns a sequence vector of index values for a field and its codes/descriptions
@@ -89,30 +75,85 @@ lookup <- function(x, d=NA) {
   return (d[x])
 }
 
-# e.g.., get NOMS column index e.g., Gender
-# field = "Gender"
-# noms_gender_col_index <- which (noms_cols == field)
+decode_NOMS_fields <- function(df, fields){
+  # replaces NOMS data field codes with decoded values from Lookup
+  # param: fields - a vector of NOMS column names
+  for (i in seq(1:length(fields))){
+     field = fields[i]
+     field_code_range <- get_lookup_code_range(field)
+     field_lookup <- get_lookup_dict(field_code_range)
+     df[,field] <- as.character(df[,field])
+     l <- df[, field]
+     dlist <- lapply(l, lookup, d=field_lookup)
+     dlist <- unlist(dlist)
+     df[, field] <- dlist
+  }
+  return (df)
+}
 
-# example 1: De-code 'Gender' using lookup 
-# examples usage of get_lookup_code_range()
-# returns: > 219 220 221 222 223 224 225
-# these values are row nums in lookup df for each code
-# gender_codes_range <- get_lookup_code_range("Gender")
+########################################################################
+#                                                                      #
+#               Read NOMS data & Code Lookup Table                     #
+#                                                                      #
+########################################################################
 
-# example usage of get_lookup_dict()
-# using the sequence, combine "codes" & "code_description"
-# as a dictionary so we can lookup key value pairs
-# gender_lookup <- get_lookup_dict(gender_codes_range)
+print('...preprocessing NOMS data...')
 
-# make replacement for codes. 
-# use dictionary and replace all codes with their values in NOMS
-# noms_df$Gender <- lapply(noms_df$Gender, d=gender_lookup)
+noms_file <- "data/NOMS.csv"
+code_lookup_path <- "data/CMHSNOMsAdultClientLevelMeasuresCodebook_20210204.xlsx"
+df <- read.csv2(noms_file, sep=",")
 
-# example 2: De-code 'Interview Type' using lookup
-# de-code interview / assesment type
-# interview_type_code_range <- get_lookup_code_range("InterviewType_07")
-# interview_type_lookup <- get_lookup_dict(interview_type_code_range)
-# noms_df$InterviewType_07 <- lapply(noms_df$InterviewType_07, lookup, d=interview_type_lookup)
+# 2nd row contains col names
+code_lookup_df <- read_excel(path=code_lookup_path, sheet=1, col_names=T, skip=1)
+
+########################################################################
+#                                                                      #
+#                           Processing                                 #
+#                                                                      #
+########################################################################
+
+# add row to mark lookup document end
+end_lookup_doc <- code_lookup_df[nrow(code_lookup_df),]
+end_lookup_doc$`Field Name` = "End"
+code_lookup_df <- rbind(code_lookup_df, end_lookup_doc)
+
+# TODO - verify required cols
+noms_cols <- colnames(df)
+
+# split column "Value Description" for easier lookup
+splits <- strsplit(code_lookup_df$`Value Descriptions`, " = ")
+split_v <- c()
+split_d <- c()
+for (i in seq(1, length(splits))){
+  v <- splits[i][[1]][1]
+  d <- splits[i][[1]][2]
+  split_v <- append(split_v, v)
+  split_d <- append(split_d, d)
+}
+
+# format specific fields
+# rm trailing ' from `ConsumerID`
+df$ConsumerID <- substr(df$ConsumerID, 0,6)
+
+# add leading '0' to NOMS Assessment field code to match code lookup
+df$Assessment <- as.character(df$Assessment)
+df$Assessment[substr(df$Assessment, 1, 1)!="-"] = paste("0", df$Assessment, sep="")
+
+# add new cols to NOMS for separate "value description" fields
+# named as "code" and "code_description"
+# rearrange columns so "Values Descriptions" are next to "code" / "code description"
+code_lookup_df$code <- split_v
+code_lookup_df$code_description <- split_d
+code_lookup_df <- code_lookup_df[,c(1:7, 10:11, 8:9)] 
+
+# collapse verbose "N/A .... " descriptions to be only NA
+# FIXME - Handle 'Unkown' or 'Refused'?
+na_m1 <- which ( code_lookup_df$code == -1)
+na_m4 <- which ( code_lookup_df$code == -4)
+na_m9 <- which ( code_lookup_df$code == -9)
+code_lookup_df$code_description[na_m1] = NA
+code_lookup_df$code_description[na_m4] = NA
+code_lookup_df$code_description[na_m9] = NA
 
 # Edit Agegroup Descriptions
 agegroup_field <-"Agegroup"
@@ -141,28 +182,10 @@ for (k in names(agegroup_lookup)){
 # replace agegroup code_descriptions
 code_lookup_df$code_description[agegroup_code_range] <- as.character(agegroup_lookup)
 
-
 # All NOMS cols to de-code
 # excluded fields typically contain dates or other
 # previously de-coded info.  See NOMS.csv for info
 decode_cols <- noms_cols[c(4:12,18:41,43:84, 86:191,193, 196:218)]
-
-decode_NOMS_fields <- function(df, fields){
-  # replaces NOMS data field codes with decoded values from Lookup
-  # param: fields - a vector of NOMS column names
-  for (i in seq(1:length(fields))){
-     field = fields[i]
-     field_code_range <- get_lookup_code_range(field)
-     field_lookup <- get_lookup_dict(field_code_range)
-     df[,field] <- as.character(df[,field])
-     l <- df[, field]
-     dlist <- lapply(l, lookup, d=field_lookup)
-     dlist <- unlist(dlist)
-     df[, field] <- dlist
-  }
-  return (df)
-}
-
 df <- decode_NOMS_fields(df, decode_cols)
 
 write_csv(df, "data/noms_df.csv")
