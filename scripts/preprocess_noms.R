@@ -47,14 +47,13 @@ code_lookup_df$code_description <- split_d
 code_lookup_df <- code_lookup_df[,c(1:7, 10:11, 8:9)] 
 
 # collapse verbose "N/A .... " descriptions to be only NA
+# FIXME - Handle 'Unkown' or 'Refused'?
 na_m1 <- which ( code_lookup_df$code == -1)
 na_m4 <- which ( code_lookup_df$code == -4)
+na_m9 <- which ( code_lookup_df$code == -9)
 code_lookup_df$code_description[na_m1] = NA
 code_lookup_df$code_description[na_m4] = NA
-
-# get NOMS column index e.g., Gender
-field = "Gender"
-noms_gender_col_index <- which (noms_cols == field)
+code_lookup_df$code_description[na_m9] = NA
 
 get_lookup_code_range <- function(field_name) {
   # returns a sequence vector of index values for a field and its codes/descriptions
@@ -90,6 +89,10 @@ lookup <- function(x, d=NA) {
   return (d[x])
 }
 
+# e.g.., get NOMS column index e.g., Gender
+# field = "Gender"
+# noms_gender_col_index <- which (noms_cols == field)
+
 # example 1: De-code 'Gender' using lookup 
 # examples usage of get_lookup_code_range()
 # returns: > 219 220 221 222 223 224 225
@@ -111,14 +114,43 @@ lookup <- function(x, d=NA) {
 # interview_type_lookup <- get_lookup_dict(interview_type_code_range)
 # noms_df$InterviewType_07 <- lapply(noms_df$InterviewType_07, lookup, d=interview_type_lookup)
 
+# Edit Agegroup Descriptions
+agegroup_field <-"Agegroup"
+agegroup_code_range <- get_lookup_code_range(agegroup_field)
+agegroup_lookup <- get_lookup_dict(agegroup_code_range)
+
+for (k in names(agegroup_lookup)){
+  v <- agegroup_lookup[k]
+  if (!is.na(v)){
+    # edit age categories for brevity:
+    # "Age 10 to 12 years old"
+    # "Age 95 years or older"
+    # edit to "10-12" or "95-", etc. 
+    s <- gsub("^.*?\\s","", v)
+    t <- gsub("\\sto\\s","-",s)
+    u <- gsub("\\s.*","",t)
+    r <- grepl("-", u, fixed = TRUE)
+    # add "-" if not matched
+    if (!r){
+      u <- paste(u, "-",sep="")
+    }
+    agegroup_lookup[k] <- u
+  }
+}
+
+# replace agegroup code_descriptions
+code_lookup_df$code_description[agegroup_code_range] <- as.character(agegroup_lookup)
+
 
 # All NOMS cols to de-code
+# excluded fields typically contain dates or other
+# previously de-coded info.  See NOMS.csv for info
 decode_cols <- noms_cols[c(4:12,18:41,43:84, 86:191,193, 196:218)]
 
-
 decode_NOMS_fields <- function(df, fields){
+  # replaces NOMS data field codes with decoded values from Lookup
+  # param: fields - a vector of NOMS column names
   for (i in seq(1:length(fields))){
-     field_lookup <- {}
      field = fields[i]
      field_code_range <- get_lookup_code_range(field)
      field_lookup <- get_lookup_dict(field_code_range)
@@ -133,10 +165,6 @@ decode_NOMS_fields <- function(df, fields){
 
 df <- decode_NOMS_fields(df, decode_cols)
 
-# preprocess_args <- list(file, idx, 5, 6, TRUE)
-# noms_data <- do.call(fun, preprocess_args) # write out preprocessed data
-
 write_csv(df, "data/noms_df.csv")
 
 print('preprocessing NOMS data complete.')
-

@@ -1,8 +1,9 @@
 ---
-title: "noms_dashboard"
+title: "NOMS"
 author: "Matthew Hull"
 date: "3/16/2022"
-output: pdf_document
+runtime: shiny
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
@@ -14,7 +15,7 @@ library(dplyr)
 library(tidyr)
 ```
 
-#### read NOMS data
+#### read pre-processed NOMS data
 
 ```{r}
 df <- read.csv("../data/noms_df.csv")
