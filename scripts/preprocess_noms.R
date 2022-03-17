@@ -136,5 +136,7 @@ df <- decode_NOMS_fields(df, decode_cols)
 # preprocess_args <- list(file, idx, 5, 6, TRUE)
 # noms_data <- do.call(fun, preprocess_args) # write out preprocessed data
 
+write_csv(df, "data/noms_df.csv")
+
 print('preprocessing NOMS data complete.')
 
