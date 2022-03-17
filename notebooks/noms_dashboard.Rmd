@@ -1,0 +1,61 @@
+---
+title: "noms_dashboard"
+author: "Matthew Hull"
+date: "3/16/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(ggpubr)
+library(data.table)
+library(dplyr)
+library(tidyr)
+```
+
+#### read NOMS data
+
+```{r}
+df <- read.csv("../data/noms_df.csv")
+```
+
+## Including Plots
+
+```{r echo=FALSE}
+ggplot(data=df, mapping=aes(x=`InterviewType_07`)) + 
+  geom_bar() +
+  xlab("Type") +
+  ggtitle("NOMS Interview Type")
+```
+
+
+```{r echo=FALSE}
+ggplot(data=df, mapping=aes(x=`Gender`)) + 
+  geom_bar() +
+  xlab("Listed Gender") +
+  ggtitle("NOMS Gender")
+```
+
+```{r echo=FALSE}
+ggplot(data=df, mapping=aes(x=`Agegroup`)) + 
+  geom_bar() +
+  xlab("Age range") +
+  theme(axis.text.x = element_text(angle = 45, hjust=1)) + 
+  ggtitle("NOMS Age Group")
+```
+
+
+```{r echo=FALSE}
+ggplot(data=df, mapping=aes(x=`SexualIdentity`)) + 
+  geom_bar() +
+  xlab("Sexual Identity") +
+  theme(axis.text.x = element_text(angle = 45, hjust=1)) + 
+  ggtitle("NOMS Sexual Identity")
+```
+
+
+```{r}
+# TODO
+```
+
