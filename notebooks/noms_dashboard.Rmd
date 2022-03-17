@@ -22,7 +22,7 @@ df <- read.csv("../data/noms_df.csv")
 
 ## Including Plots
 
-```{r echo=FALSE}
+```{r echo=FALSE, warning=FALSE}
 ggplot(data=df, mapping=aes(x=`InterviewType_07`)) + 
   geom_bar() +
   xlab("Type") +
@@ -30,14 +30,14 @@ ggplot(data=df, mapping=aes(x=`InterviewType_07`)) +
 ```
 
 
-```{r echo=FALSE}
+```{r echo=FALSE, warning=FALSE}
 ggplot(data=df, mapping=aes(x=`Gender`)) + 
   geom_bar() +
   xlab("Listed Gender") +
   ggtitle("NOMS Gender")
 ```
 
-```{r echo=FALSE}
+```{r echo=FALSE, warning=FALSE}
 ggplot(data=df, mapping=aes(x=`Agegroup`)) + 
   geom_bar() +
   xlab("Age range") +
@@ -46,7 +46,7 @@ ggplot(data=df, mapping=aes(x=`Agegroup`)) +
 ```
 
 
-```{r echo=FALSE}
+```{r echo=FALSE, warning=FALSE}
 ggplot(data=df, mapping=aes(x=`SexualIdentity`)) + 
   geom_bar() +
   xlab("Sexual Identity") +
